@@ -32,7 +32,15 @@ class Node(object):
             virtual_host=VHOST
         )
 
-        self.consumer = Consumer(
+        self.consumer_write = Consumer(
+            queue_url=QUEUE_URL,
+            queue_port=QUEUE_PORT,
+            username=USERNAME,
+            password=PASSWORD,
+            virtual_host=VHOST
+        )
+
+        self.consumer_broadcast = Consumer(
             queue_url=QUEUE_URL,
             queue_port=QUEUE_PORT,
             username=USERNAME,
@@ -96,7 +104,7 @@ class Node(object):
 
     def consume_write(self):
         routing_key = 'WRITE_{}'.format(self.node_id)
-        self.consumer.consume(
+        self.consumer_write.consume(
             ex_name=EX_WRITE,
             routing_key=routing_key,
             type=DIRECT,
@@ -104,7 +112,7 @@ class Node(object):
         )
     def consume_broadcast(self):
         routing_key = 'BROADCAST_{}'.format(self.node_id)
-        self.consumer.consume(
+        self.consumer_broadcast.consume(
             ex_name=EX_WRITE,
             routing_key=routing_key,
             type=DIRECT,
