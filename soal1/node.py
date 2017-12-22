@@ -85,6 +85,6 @@ args = sys.argv
 if len(args) > 1:
     node_id = args[1]
     print 'NODE_ID = {}'.format(node_id)
-    node = Node(1)
+    node = Node(node_id)
 else:
     print('Usage: python node.py [NODE_ID]')
