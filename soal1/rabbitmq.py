@@ -72,5 +72,3 @@ class Publisher(RabbitMQ):
         self.channel.basic_publish(exchange=ex_name,
                                    routing_key=routing_key,
                                    body=message)
-
-        self.connection.close()

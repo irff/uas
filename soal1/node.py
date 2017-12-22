@@ -40,6 +40,9 @@ class Node(object):
             virtual_host=VHOST
         )
 
+        self.db = TinyDB('db.json')
+        self.DB = Query()
+
         consume_write_thread = threading.Thread(
             target=self.consume_write
         )
@@ -59,6 +62,24 @@ class Node(object):
 
     def consume_write_callback(self, ch, method, properties, body):
         print('WRITE Callback called! body={}'.format(body))
+        message = body
+
+        try:
+            result = self.db.get(self.DB.node_id == self.node_id)
+            if result is not None:
+                self.db.update({
+                    'message': message
+                }, self.DB.node_id == self.node_id)
+                print("DB updated: {}".format(message))
+            else:
+                self.db.insert({
+                    'message': message,
+                    'node_id': self.node_id
+                })
+                print("DB inserted: {}".format(message))
+
+        except Exception as e:
+            print('Error writing to DB. {}'.format(e.message))
 
         self.publish_ack(body)
 
@@ -76,7 +97,8 @@ class Node(object):
         self.publisher.publish(
             ex_name=EX_WRITE,
             routing_key=routing_key,
-            message=self.attach_sender_id(message)
+            message=self.attach_sender_id(message),
+            type=DIRECT
         )
 
 
