@@ -39,6 +39,7 @@ class Relay(object):
             virtual_host=VHOST
         )
 
+        # daftar Node ID, jangan lupa menambahkan ke sini jika menjalankan node baru
         self.nodes = [1, 2, 3]
 
     def consume(self):

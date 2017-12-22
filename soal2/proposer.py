@@ -40,10 +40,38 @@ class Proposer(object):
             virtual_host=VHOST
         )
 
+        # daftar Acceptor ID
+        self.acceptors = [1, 2]
+        self.number_of_acceptors = len(self.acceptors)
+
+    def attach_sender_id(self, message, sender_id):
+        message = {
+            'sender_id': sender_id,
+            'message': message
+        }
+
+        return json.dumps(message)
+
     def callback(self, ch, method, properties, body):
         print('Callback called! body={}'.format(body))
         pass
 
+    # Proposer mengirim pesan PREPARE ke semua acceptor
+    def publish_prepare(self, message):
+        for acceptor in self.acceptors:
+            routing_key = 'PREPARE_{}'.format(acceptor)
+            self.publisher.publish(
+                ex_name=EX_PAXOS,
+                routing_key=routing_key,
+                message=self.attach_sender_id(message, self.proposer_id),
+                type=DIRECT
+            )
+
+    # Proposer consume pesan PROMISE dari acceptor yang menerima PREPARE
+    # Hitung apakah promise didapat dari mayoritas acceptor
+    # Apabila IYA, kirim CONFIRM ke acceptor
+    def consume_promise(self):
+        pass
 
 # PARSING PROPOSER_ID DARI CLI PARAMETER & Jalankan Proposer
 args = sys.argv
