@@ -48,6 +48,14 @@ class Node(object):
             virtual_host=VHOST
         )
 
+        self.consumer_read = Consumer(
+            queue_url=QUEUE_URL,
+            queue_port=QUEUE_PORT,
+            username=USERNAME,
+            password=PASSWORD,
+            virtual_host=VHOST
+        )
+
         self.db = TinyDB('db.json')
         self.DB = Query()
 
@@ -61,6 +69,11 @@ class Node(object):
         )
         consume_broadcast_thread.start()
 
+        consume_read_thread = threading.Thread(
+            target=self.consume_read
+        )
+        consume_read_thread.start()
+
     def attach_sender_id(self, message):
         message = {
             'sender_id': self.node_id,
@@ -72,6 +85,16 @@ class Node(object):
     def callback(self, ch, method, properties, body):
         print('Callback called! body={}'.format(body))
         pass
+
+    def read_db(self):
+        try:
+            result = self.db.get(self.DB.node_id == self.node_id)
+            if result is not None:
+                print('Node {} contains message: {}'.format(self.node_id, result))
+            else:
+                print('Node {} empty.'.format(self.node_id))
+        except Exception as e:
+            print('Error reading from DB. {}'.format(e.message))
 
     def update_db(self, message):
         try:
@@ -102,6 +125,10 @@ class Node(object):
         print('BROADCAST Callback called! body={}'.format(body))
         self.update_db(message=body)
 
+    def consume_read_callback(self, ch, method, properties, body):
+        print('READ Callback called! body={}'.format(body))
+        self.read_db()
+
     def consume_write(self):
         routing_key = 'WRITE_{}'.format(self.node_id)
         self.consumer_write.consume(
@@ -117,6 +144,15 @@ class Node(object):
             routing_key=routing_key,
             type=DIRECT,
             callback=self.consume_broadcast_callback
+        )
+
+    def consume_read(self):
+        routing_key = 'READ'
+        self.consumer_read.consume(
+            ex_name=EX_READ,
+            routing_key=routing_key,
+            type=FANOUT,
+            callback=self.consume_read_callback
         )
 
     def publish_ack(self, message):

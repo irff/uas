@@ -96,10 +96,20 @@ class Relay(object):
 
     def broadcast(self, message, source_node):
         for node in self.nodes:
-            if node != source_node:
+            if str(node) != source_node:
                 self.publish_broadcast(
                     message=message,
                     receiver_node=node)
+
+    def publish_read(self):
+        routing_key = 'READ'
+        message = 'read'
+        self.publisher.publish(
+            ex_name=EX_READ,
+            routing_key=routing_key,
+            message=message,
+            type=FANOUT
+        )
 
 args = sys.argv
 
@@ -110,7 +120,7 @@ if len(args) > 1:
     if action == 'CONSUME':
         relay.consume()
     elif action == 'READ':
-        pass
+        relay.publish_read()
     elif action == 'WRITE' and len(args) > 3:
         receiver_node = int(args[2])
         message = args[3]
