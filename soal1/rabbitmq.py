@@ -66,7 +66,7 @@ class Publisher(RabbitMQ):
         ))
 
         self.channel.exchange_declare(exchange=ex_name,
-                                      exchange_type='direct',
+                                      exchange_type=type,
                                       durable=True)
 
         self.channel.basic_publish(exchange=ex_name,
