@@ -48,6 +48,11 @@ class Node(object):
         )
         consume_write_thread.start()
 
+        consume_broadcast_thread = threading.Thread(
+            target=self.consume_broadcast
+        )
+        consume_broadcast_thread.start()
+
     def attach_sender_id(self, message):
         message = {
             'sender_id': self.node_id,
