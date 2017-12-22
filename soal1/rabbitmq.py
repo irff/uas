@@ -45,7 +45,7 @@ class Consumer(RabbitMQ):
                                 queue=queue_name,
                                 routing_key=routing_key)
 
-        self.channel.basic_consume(callback=callback,
+        self.channel.basic_consume(consumer_callback=callback,
                                    queue=queue_name,
                                    no_ack=True)
 

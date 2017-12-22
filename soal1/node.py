@@ -4,6 +4,7 @@ import time
 import json
 import pika
 import threading
+import sys
 from datetime import datetime
 from tinydb import TinyDB, Query
 
@@ -77,3 +78,13 @@ class Node(object):
             routing_key=routing_key,
             message=self.attach_sender_id(message)
         )
+
+
+args = sys.argv
+
+if len(args) > 1:
+    node_id = args[1]
+    print 'NODE_ID = {}'.format(node_id)
+    node = Node(1)
+else:
+    print('Usage: python node.py [NODE_ID]')

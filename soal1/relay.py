@@ -4,6 +4,7 @@ import time
 import json
 import pika
 import threading
+import sys
 from datetime import datetime
 from tinydb import TinyDB, Query
 
@@ -39,11 +40,11 @@ class Relay(object):
 
         self.nodes = [1, 2, 3]
 
+    def consume(self):
         consume_ack_thread = threading.Thread(
             target=self.consume_ack
         )
         consume_ack_thread.start()
-
 
     def callback(self, ch, method, properties, body):
         print('Callback called! body={}'.format(body))
@@ -90,3 +91,27 @@ class Relay(object):
                     message=message,
                     type=DIRECT
                 )
+
+args = sys.argv
+
+if len(args) > 1:
+    action = args[1]
+    print 'ACTION = {}'.format(action)
+    relay = Relay()
+    if action == 'CONSUME':
+        relay.consume()
+    elif action == 'READ':
+        pass
+    elif action == 'WRITE' and len(args) > 3:
+        receiver_node = int(args[2])
+        message = args[3]
+        relay.publish_write(
+            message=message,
+            receiver_node=receiver_node
+        )
+else:
+    print('Usage: python relay.py [ACTIONS]')
+    print('Example: ')
+    print('> python relay.py CONSUME')
+    print('> python relay.py READ')
+    print('> python relay.py WRITE 1 \'Hello world!\'')
