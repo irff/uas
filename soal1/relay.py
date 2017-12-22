@@ -3,6 +3,7 @@ from rabbitmq import RabbitMQ, Consumer, Publisher
 import time
 import json
 import pika
+import random
 import threading
 import sys
 from datetime import datetime
@@ -72,8 +73,20 @@ class Relay(object):
 
     # Relay mengirimkan pesan WRITE dengan tipe DIRECT ke suatu node
     def publish_write(self, message, receiver_node):
-        routing_key = 'WRITE_{}'.format(receiver_node)
+        rand_seconds = random.randrange(1000, 5000)/1000
+        time.sleep(rand_seconds)
 
+        routing_key = 'WRITE_{}'.format(receiver_node)
+        self.publisher.publish(
+            ex_name=EX_WRITE,
+            routing_key=routing_key,
+            message=message,
+            type=DIRECT
+        )
+
+    def publish_broadcast(self, message, receiver_node):
+
+        routing_key = 'BROADCAST_{}'.format(receiver_node)
         self.publisher.publish(
             ex_name=EX_WRITE,
             routing_key=routing_key,
@@ -84,13 +97,9 @@ class Relay(object):
     def broadcast(self, message, source_node):
         for node in self.nodes:
             if node != source_node:
-                routing_key = 'BROADCAST_{}'.format(node)
-                self.publisher.publish(
-                    ex_name=EX_WRITE,
-                    routing_key=routing_key,
+                self.publish_broadcast(
                     message=message,
-                    type=DIRECT
-                )
+                    receiver_node=node)
 
 args = sys.argv
 

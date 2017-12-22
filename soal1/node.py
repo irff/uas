@@ -60,10 +60,7 @@ class Node(object):
         print('Callback called! body={}'.format(body))
         pass
 
-    def consume_write_callback(self, ch, method, properties, body):
-        print('WRITE Callback called! body={}'.format(body))
-        message = body
-
+    def update_db(self, message):
         try:
             result = self.db.get(self.DB.node_id == self.node_id)
             if result is not None:
@@ -81,7 +78,16 @@ class Node(object):
         except Exception as e:
             print('Error writing to DB. {}'.format(e.message))
 
+
+    def consume_write_callback(self, ch, method, properties, body):
+        print('WRITE Callback called! body={}'.format(body))
+
+        self.update_db(message=body)
         self.publish_ack(body)
+
+    def consume_broadcast_callback(self, ch, method, properties, body):
+        print('BROADCAST Callback called! body={}'.format(body))
+        self.update_db(message=body)
 
     def consume_write(self):
         routing_key = 'WRITE_{}'.format(self.node_id)
@@ -90,6 +96,14 @@ class Node(object):
             routing_key=routing_key,
             type=DIRECT,
             callback=self.consume_write_callback
+        )
+    def consume_broadcast(self):
+        routing_key = 'BROADCAST_{}'.format(self.node_id)
+        self.consumer.consume(
+            ex_name=EX_WRITE,
+            routing_key=routing_key,
+            type=DIRECT,
+            callback=self.consume_broadcast_callback
         )
 
     def publish_ack(self, message):
