@@ -129,6 +129,9 @@ class Node(object):
         print('READ Callback called! body={}'.format(body))
         self.read_db()
 
+    # Lakukan consume WRITE_[NODE_ID]
+    # Apabila menerima, langsung menulis message di DB
+    # Lalu publish response ACK_RELAY
     def consume_write(self):
         routing_key = 'WRITE_{}'.format(self.node_id)
         self.consumer_write.consume(
@@ -137,6 +140,9 @@ class Node(object):
             type=DIRECT,
             callback=self.consume_write_callback
         )
+
+    # Lakukan Consume BROADCAST_[NODE_ID]
+    # Apabila menerima, langsung tulis message di DB
     def consume_broadcast(self):
         routing_key = 'BROADCAST_{}'.format(self.node_id)
         self.consumer_broadcast.consume(
@@ -146,6 +152,8 @@ class Node(object):
             callback=self.consume_broadcast_callback
         )
 
+    # Lakukan Consume READ
+    # Apabila menerima, langsung baca di DB dan outputkan ke terminal
     def consume_read(self):
         routing_key = 'READ'
         self.consumer_read.consume(
@@ -155,6 +163,7 @@ class Node(object):
             callback=self.consume_read_callback
         )
 
+    # Publish ACK_RELAY ke node relay bila selesai menerima input WRITE dan selesai menuliskan ke DB
     def publish_ack(self, message):
         routing_key = 'ACK_RELAY'
         self.publisher.publish(
@@ -165,11 +174,5 @@ class Node(object):
         )
 
 
-args = sys.argv
 
-if len(args) > 1:
-    node_id = args[1]
-    print 'NODE_ID = {}'.format(node_id)
-    node = Node(node_id)
-else:
-    print('Usage: python node.py [NODE_ID]')
+

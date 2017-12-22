@@ -73,8 +73,6 @@ class Relay(object):
 
     # Relay mengirimkan pesan WRITE dengan tipe DIRECT ke suatu node
     def publish_write(self, message, receiver_node):
-        rand_seconds = random.randrange(1000, 5000)/1000
-        time.sleep(rand_seconds)
 
         routing_key = 'WRITE_{}'.format(receiver_node)
         self.publisher.publish(
@@ -84,16 +82,26 @@ class Relay(object):
             type=DIRECT
         )
 
+    # Fungsi Publish broadcast ke suatu node, tapi delay secara random antara 1-5 detik
     def publish_broadcast(self, message, receiver_node):
+        def broadcast_sleep():
+            rand_seconds = random.randrange(1000, 5000) / 1000
+            time.sleep(rand_seconds)
 
-        routing_key = 'BROADCAST_{}'.format(receiver_node)
-        self.publisher.publish(
-            ex_name=EX_WRITE,
-            routing_key=routing_key,
-            message=message,
-            type=DIRECT
+            routing_key = 'BROADCAST_{}'.format(receiver_node)
+            self.publisher.publish(
+                ex_name=EX_WRITE,
+                routing_key=routing_key,
+                message=message,
+                type=DIRECT
+            )
+
+        broadcast_thread = threading.Thread(
+            target=broadcast_sleep
         )
+        broadcast_thread.start()
 
+    # Untuk setiap node selain SOURCE_NODE, publish broadcast
     def broadcast(self, message, source_node):
         for node in self.nodes:
             if str(node) != source_node:
@@ -101,6 +109,7 @@ class Relay(object):
                     message=message,
                     receiver_node=node)
 
+    # Publish READ secara fanout ke semua node
     def publish_read(self):
         routing_key = 'READ'
         message = 'read'
